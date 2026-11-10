@@ -1,20 +1,23 @@
 # ESP32 DHT11 BLE Android App
 
-Minimal Jetpack Compose app that scans for the ESP32 published in this repo, connects over BLE, subscribes to the temperature and humidity characteristics, and shows the live values.
+Minimal **Jetpack Compose** Android client that scans for the `ESP32-DHT11` BLE peripheral, subscribes to GATT notifications, and displays live temperature, relative humidity, and computed dew point.
 
-## BLE profile (matches the firmware)
-- Device name: `ESP32-DHT11`
-- Service UUID: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
-- Characteristics
-  - Temperature (read + notify): `6e400002-b5a3-f393-e0a9-e50e24dcca9e`
-  - Humidity (read + notify): `6e400003-b5a3-f393-e0a9-e50e24dcca9e`
+## BLE GATT Profile
 
-## How to build and run
-1. Open the `android-app` folder in Android Studio (AGP 8.5+, JDK 17).
-2. Connect a phone (Android 8+; Android 12+ will prompt for BLE permissions).
-3. Install/run the app. Tap “扫描并连接” to scan, connect, and start receiving values.
+- **Device Name**: `ESP32-DHT11`
+- **Service UUID**: `6e400001-b5a3-f393-e0a9-e50e24dcca9e`
+- **Characteristics (`READ | NOTIFY`)**:
+  - **Temperature**: `6e400002-b5a3-f393-e0a9-e50e24dcca9e`
+  - **Humidity**: `6e400003-b5a3-f393-e0a9-e50e24dcca9e`
 
-## Notes
-- The app filters by service UUID *and* device name to reduce false matches.
-- On first use you must grant Bluetooth permissions (and location on Android 11 and below).
-- Press “断开连接” to stop notifications and close the GATT session.
+## Build & Run
+
+1. Open `android-app` in **Android Studio** (AGP 8.5+, JDK 17).
+2. Connect a physical Android device running **Android 8.0 (API 26)+**.
+3. Build and launch the app, then tap **Scan & Connect**.
+4. Tap **Disconnect** to stop notifications and release the GATT connection.
+
+## Implementation Notes
+
+- **Android 12+ Privacy**: `BLUETOOTH_SCAN` declares `usesPermissionFlags="neverForLocation"` so location permission is only requested on Android 11 and below.
+- **Serialized GATT Queue**: All CCCD descriptor writes and initial characteristic reads are queued and dispatched strictly one operation at a time via `onDescriptorWrite` / `onCharacteristicRead`.

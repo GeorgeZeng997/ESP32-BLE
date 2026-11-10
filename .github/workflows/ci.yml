@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master, "chore/**" ]
+  pull_request:
+
+jobs:
+  firmware-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run C++17 DHT11 math unit tests
+        run: |
+          g++ -std=c++17 -Wall -Wextra -Werror tests/test_dht11_math.cpp -lm -o /tmp/test_dht11_math
+          /tmp/test_dht11_math
+
+      - name: Run BLE profile consistency checks
+        run: python3 -m unittest discover -s tests -v
+
+      - name: Set up Python for PlatformIO
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Cache PlatformIO
+        uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: ${{ runner.os }}-pio-esp32-ble-${{ hashFiles('platformio.ini') }}
+
+      - name: Build ESP32 BLE firmware
+        run: |
+          pip install --upgrade platformio
+          pio run
